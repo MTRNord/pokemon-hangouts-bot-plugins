@@ -187,10 +187,13 @@ def pkmn_translate(bot, event, pokemon):
         bot.coro_send_message(event.conv, "Info: Checking file!")
         pokemon_id = "default"
         with open('{}/pokemon_species_names.csv'.format(os.path.dirname(os.path.realpath(__file__))), 'r') as f:
+            logger.info("DEBUG: openFile")
             reader = csv.reader(f)
             rows = list(csv.reader(f))
             for i, row in enumerate(reader):
+                logger.info("DEBUG: row =  {}".format(i))
                 for j, column in enumerate(row):
+                    logger.info("Info: DEBUG = {}".format(j))
                     if string in column:
                         logger.info("Info: row =  {}".format(i))
                         logger.info("Info: column = {}".format(j))
