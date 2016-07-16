@@ -8,6 +8,7 @@ import hangups, plugins, asyncio, logging, datetime
 import urllib.request
 import json
 import aiohttp, os, io
+import csv
 
 logger = logging.getLogger(__name__)
 
@@ -112,7 +113,10 @@ def gettype(bot, pkmntype, logger):
 def pokedex(bot, event, pokemon):
   '''Returns the number, types, weaknesses and image of a pokemon'''
   if pokemon.isdigit(): return
-  url = "http://pokeapi.co/api/v2/pokemon/{}/".format(pokemon.lower())
+  # change pokemon name to id to get multilang support
+  pokemon_id = list(pkmn_translate(bot, event, "{}".format(pokemon.lower())));
+  logger.info("Info: PkoemnonID = {}".format(pokemon_id))
+  url = "http://pokeapi.co/api/v2/pokemon/{}/".format(pokemon_id)
   request = urllib.request.Request(url, headers = {"User-agent":"Mozilla/5.0"})
   cache = getfromcache(bot, pokemon.lower())
 
@@ -142,7 +146,7 @@ def pokedex(bot, event, pokemon):
     if type1:
       matchups = {'2x':type1['damage_relations']['double_damage_from'],'1/2':type1['damage_relations']['half_damage_from'],'immune':type1['damage_relations']['no_damage_from']}
   matches = ""
-  
+
   if matchups:
     for x in matchups:
       if len(matchups[x]) > 0:
@@ -150,7 +154,7 @@ def pokedex(bot, event, pokemon):
         for y in matchups[x]:
           if isinstance(y, dict):
             matches = matches + " <a href='http://pokemondb.net/type/{}'>{}</a>".format(y['name'].lower(),y['name'].capitalize())
-          else: 
+          else:
             matches = matches + " <a href='http://pokemondb.net/type/{}'>{}</a>".format(y.lower(),y.capitalize())
   else:
     matches = "<i>Type matchups not currently available. Sorry :(</i>"
@@ -163,3 +167,45 @@ def pokedex(bot, event, pokemon):
   image_data = io.BytesIO(raw)
   image_id = yield from bot._client.upload_image(image_data, filename=filename)
   yield from bot.coro_send_message(event.conv, pkmn, image_id=image_id)
+
+def pkmn_translate(bot, event, pokemon):
+    logger.info("translating pokemon name")
+    url = "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon_species_names.csv"
+    request = urllib.request.Request(url, headers = {"User-agent":"Mozilla/5.0"})
+    try:
+        data = urllib.request.urlopen(request)
+        with open('pokemon_species_names.csv', 'b+w') as f:
+            try:
+                f.write(data.read())
+                logger.info("translating db saved")
+            except:
+                logger.info("Error: save failed")
+                yield from bot.coro_send_message(event.conv, "Error: save failed")
+                return
+    except urllib.error.URLError as e:
+        logger.info("{}: Error: {}".format(event.user.full_name, json.loads(e.read().decode("utf8","ignore"))['detail']))
+        yield from bot.coro_send_message(event.conv, "{}: Error: {}".format(event.user.full_name, json.loads(e.read().decode("utf8","ignore"))['detail']))
+        return
+    if os.path.exists('pokemon_species_names.csv'):
+        bot.coro_send_message(event.conv, "Info: Checking file!")
+        with open('pokemon_species_names.csv', 'r') as f:
+            reader = csv.reader(f)
+            rows = list(csv.reader(f))
+            pokemon_id = "0"
+            for i, row in enumerate(reader):
+                for j, column in enumerate(row):
+                    if string in column:
+                        logger.info("Info: row =  {}".format(i))
+                        logger.info("Info: column = {}".format(j))
+                        pokemon_id = rows[i][0]
+                        logger.info("Info: {}".format(pokemon_id))
+                        bot.coro_send_message(event.conv, "Info: {}".format(pokemon_id))
+                        yield from pokemon_id
+                        return pokemon_id
+                    else:
+                        logger.info("Error: Name not in File!")
+                        bot.coro_send_message(event.conv, "Error: Name not in File!")
+    else:
+        pokemon_id = "0"
+        logger.info("Error: File not found!")
+        bot.coro_send_message(event.conv, "Error: File not found!")
