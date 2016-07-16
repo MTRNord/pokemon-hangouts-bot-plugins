@@ -115,7 +115,7 @@ def pokedex(bot, event, pokemon):
   if pokemon.isdigit(): return
   # change pokemon name to id to get multilang support
   pokemon_id = list(pkmn_translate(bot, event, "{}".format(pokemon.lower())));
-  logger.info("Info: PkoemnonID = {}".format(pokemon_id))
+  logger.info("Info: PokemonID = {}".format(pokemon_id))
   url = "http://pokeapi.co/api/v2/pokemon/{}/".format(pokemon_id)
   request = urllib.request.Request(url, headers = {"User-agent":"Mozilla/5.0"})
   cache = getfromcache(bot, pokemon.lower())
@@ -174,24 +174,21 @@ def pkmn_translate(bot, event, pokemon):
     request = urllib.request.Request(url, headers = {"User-agent":"Mozilla/5.0"})
     try:
         data = urllib.request.urlopen(request)
-        with open('pokemon_species_names.csv', 'b+w') as f:
-            try:
-                f.write(data.read())
-                logger.info("translating db saved")
-            except:
-                logger.info("Error: save failed")
-                yield from bot.coro_send_message(event.conv, "Error: save failed")
-                return
+        with open('{}/pokemon_species_names.csv'.format(os.path.dirname(os.path.realpath(__file__))), 'b+w') as f:
+            f.write(data.read())
+            logger.info("translating db saved")
     except urllib.error.URLError as e:
         logger.info("{}: Error: {}".format(event.user.full_name, json.loads(e.read().decode("utf8","ignore"))['detail']))
         yield from bot.coro_send_message(event.conv, "{}: Error: {}".format(event.user.full_name, json.loads(e.read().decode("utf8","ignore"))['detail']))
         return
-    if os.path.exists('pokemon_species_names.csv'):
+    logger.info("DEBUG: Checking file next!")
+    if os.path.exists('{}/pokemon_species_names.csv'.format(os.path.dirname(os.path.realpath(__file__)))):
+        logger.info("Info: Checking file!")
         bot.coro_send_message(event.conv, "Info: Checking file!")
-        with open('pokemon_species_names.csv', 'r') as f:
+        with open('{}/pokemon_species_names.csv'.format(os.path.dirname(os.path.realpath(__file__))), 'r') as f:
             reader = csv.reader(f)
             rows = list(csv.reader(f))
-            pokemon_id = "0"
+            pokemon_id = "default"
             for i, row in enumerate(reader):
                 for j, column in enumerate(row):
                     if string in column:
@@ -206,6 +203,8 @@ def pkmn_translate(bot, event, pokemon):
                         logger.info("Error: Name not in File!")
                         bot.coro_send_message(event.conv, "Error: Name not in File!")
     else:
-        pokemon_id = "0"
+        pokemon_id = "fail"
         logger.info("Error: File not found!")
         bot.coro_send_message(event.conv, "Error: File not found!")
+    logger.info("Debug func: PokemonID = {}".format(pokemon_id))
+
