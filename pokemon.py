@@ -181,32 +181,29 @@ def pkmn_translate(bot, event, pokemon):
         logger.info("{}: Error: {}".format(event.user.full_name, json.loads(e.read().decode("utf8","ignore"))['detail']))
         yield from bot.coro_send_message(event.conv, "{}: Error: {}".format(event.user.full_name, json.loads(e.read().decode("utf8","ignore"))['detail']))
         return
-    logger.info("DEBUG: Checking file next!")
-    if os.path.exists('{}/pokemon_species_names.csv'.format(os.path.dirname(os.path.realpath(__file__)))):
-        logger.info("Info: Checking file!")
-        bot.coro_send_message(event.conv, "Info: Checking file!")
-        pokemon_id = "default"
-        with open('{}/pokemon_species_names.csv'.format(os.path.dirname(os.path.realpath(__file__))), 'r') as f:
-            logger.info("DEBUG: openFile")
-            reader = csv.reader(f)
-            rows = list(csv.reader(f))
-            for i, row in enumerate(reader):
-                logger.info("DEBUG: row =  {}".format(i))
-                for j, column in enumerate(row):
-                    logger.info("Info: DEBUG = {}".format(j))
-                    if string in column:
-                        logger.info("Info: row =  {}".format(i))
-                        logger.info("Info: column = {}".format(j))
-                        pokemon_id = rows[i][0]
-                        logger.info("Info: {}".format(pokemon_id))
-                        bot.coro_send_message(event.conv, "Info: {}".format(pokemon_id))
-                    else:
-                        logger.info("Error: Name not in File!")
-                        bot.coro_send_message(event.conv, "Error: Name not in File!")
-    else:
-        pokemon_id = "fail"
-        logger.info("Error: File not found!")
-        bot.coro_send_message(event.conv, "Error: File not found!")
+    pokemon_id = "default"
+    with open('{}/pokemon_species_names.csv'.format(os.path.dirname(os.path.realpath(__file__))), 'rt') as f:
+        logger.info("DEBUG: openFile")
+        reader = csv.reader(f)
+        rows = list(reader)
+        logger.info("DEBUG: reader = {}".format(list(reader)))
+        logger.info("DEBUG: rows = {}".format(rows))
+        for i, row in enumerate(reader):
+            logger.info("DEBUG: row = {}".format(row))
+            if pokemon in column:
+                #DEBUG
+                logger.info("Info: row =  {}".format(row))
+                logger.info("Info: column = {}".format(column))
+                #SET VAR
+                pokemon_id = rows[i][0]
+                #DEBUG
+                logger.info("Info: {}".format(pokemon_id))
+                bot.coro_send_message(event.conv, "Info: {}".format(pokemon_id))
+            else:
+                logger.info("Error: Name not in File!")
+                bot.coro_send_message(event.conv, "Error: Name not in File!")
+        else:
+            logger.info("DEBUG: Loop exited")
     logger.info("Debug func: PokemonID = {}".format(pokemon_id))
     yield from pokemon_id
     return pokemon_id
