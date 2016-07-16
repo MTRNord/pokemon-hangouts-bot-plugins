@@ -185,10 +185,10 @@ def pkmn_translate(bot, event, pokemon):
     if os.path.exists('{}/pokemon_species_names.csv'.format(os.path.dirname(os.path.realpath(__file__)))):
         logger.info("Info: Checking file!")
         bot.coro_send_message(event.conv, "Info: Checking file!")
+        pokemon_id = "default"
         with open('{}/pokemon_species_names.csv'.format(os.path.dirname(os.path.realpath(__file__))), 'r') as f:
             reader = csv.reader(f)
             rows = list(csv.reader(f))
-            pokemon_id = "default"
             for i, row in enumerate(reader):
                 for j, column in enumerate(row):
                     if string in column:
@@ -197,8 +197,6 @@ def pkmn_translate(bot, event, pokemon):
                         pokemon_id = rows[i][0]
                         logger.info("Info: {}".format(pokemon_id))
                         bot.coro_send_message(event.conv, "Info: {}".format(pokemon_id))
-                        yield from pokemon_id
-                        return pokemon_id
                     else:
                         logger.info("Error: Name not in File!")
                         bot.coro_send_message(event.conv, "Error: Name not in File!")
@@ -207,4 +205,5 @@ def pkmn_translate(bot, event, pokemon):
         logger.info("Error: File not found!")
         bot.coro_send_message(event.conv, "Error: File not found!")
     logger.info("Debug func: PokemonID = {}".format(pokemon_id))
-
+    yield from pokemon_id
+    return pokemon_id
